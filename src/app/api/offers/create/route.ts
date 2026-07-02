@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
   if (!trimmedMessage || !contact_name) {
     return NextResponse.json({ error: '必須項目が不足しています' }, { status: 400 })
   }
-  if (trimmedMessage.length > 50) {
-    return NextResponse.json({ error: 'メッセージは50文字以内で入力してください' }, { status: 400 })
+  if (trimmedMessage.length > 200) {
+    return NextResponse.json({ error: 'メッセージは200文字以内で入力してください' }, { status: 400 })
   }
   if (contact_name.length > 50) {
     return NextResponse.json({ error: 'お名前は50文字以内で入力してください' }, { status: 400 })

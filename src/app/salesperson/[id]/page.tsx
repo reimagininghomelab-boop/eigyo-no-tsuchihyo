@@ -815,13 +815,13 @@ function SalespersonDetailContent() {
               <div>
                 <div className="flex justify-between items-baseline mb-1">
                   <label className="text-xs text-gray-500 font-medium">相談内容 <span className="text-red-400">*</span></label>
-                  <span className="text-xs text-gray-400">{offerMessage.length}/50文字</span>
+                  <span className="text-xs text-gray-400">{offerMessage.length}/200文字</span>
                 </div>
                 <textarea
                   value={offerMessage} onChange={(e) => setOfferMessage(e.target.value)}
-                  placeholder="家づくりの希望、不安なこと、相談したいことを自由に書いてください"
+                  placeholder="検討エリア、予算、建築時期、相談したいことなどをお書きください"
                   rows={4}
-                  maxLength={50}
+                  maxLength={200}
                   className="w-full text-sm text-gray-800 bg-white border border-stone-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-teal-200 placeholder:text-gray-400"
                 />
               </div>
