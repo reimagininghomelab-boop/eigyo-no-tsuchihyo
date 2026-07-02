@@ -196,7 +196,7 @@ function SalespersonDetailContent() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`,
         },
-        body: JSON.stringify({ salesperson_id: id, user_id: user.id }),
+        body: JSON.stringify({ salesperson_id: id }),
       })
       const { url, error } = await res.json()
       if (url) {
