@@ -68,16 +68,14 @@ export async function POST(request: NextRequest) {
   }
   if (!unlocked) return NextResponse.json({ error: 'この営業マンのプロフィールを開示していません' }, { status: 403 })
 
-  // 営業の存在・公開状態確認（status + is_visible 両方チェック）
+  // 営業の存在・公開状態確認（safe_salesperson_profiles は status='active' AND is_visible=true を内包）
   const { data: sp, error: spError } = await supabase
-    .from('salesperson_profiles')
+    .from('safe_salesperson_profiles')
     .select('id')
     .eq('id', salesperson_id)
-    .eq('status', 'active')
-    .eq('is_visible', true)
     .maybeSingle()
   if (spError) {
-    console.error('[offers/create] salesperson_profiles lookup error', { code: spError.code, message: spError.message })
+    console.error('[offers/create] safe_salesperson_profiles lookup error', { code: spError.code, message: spError.message })
     return NextResponse.json({ error: 'サーバーエラーが発生しました' }, { status: 500 })
   }
   if (!sp) return NextResponse.json({ error: '営業マンが見つかりません' }, { status: 404 })
