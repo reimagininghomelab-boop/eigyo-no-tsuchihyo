@@ -43,6 +43,8 @@ function SalespersonDetailContent() {
   const [offerDone, setOfferDone] = useState(false)
   const [offerError, setOfferError] = useState('')
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [paymentPending, setPaymentPending] = useState(false)
+  const [paymentTimeout, setPaymentTimeout] = useState(false)
 
   const PHASE_META: Record<string, { label: string; bg: string; border: string; text: string }> = {
     pre_contract:   { label: '契約前', bg: 'bg-teal-50',   border: 'border-teal-200',   text: 'text-teal-700' },
@@ -75,6 +77,35 @@ function SalespersonDetailContent() {
 
   useEffect(() => {
     const supabase = createClient()
+    // アンマウント/再実行後の setState とポーリング二重起動を防ぐキャンセルフラグ
+    let cancelled = false
+
+    // 開示済みデータの画面反映（初回開示済み・決済後ポーリング成功で共通）
+    const applyUnlockedData = async (fullData: any, currentUserId: string) => {
+      setUnlockedData(fullData)
+      await fetchReviews(supabase, currentUserId)
+      if (cancelled) return
+
+      const [{ data: anonData }, { data: myPhaseData }] = await Promise.all([
+        supabase
+          .from('anonymous_reviews')
+          .select('id, rating, content, phase, source, created_at')
+          .eq('salesperson_id', id)
+          .eq('status', 'visible')
+          .order('created_at', { ascending: false }),
+        supabase.rpc('get_my_submitted_phases', { p_salesperson_id: id }),
+      ])
+      if (cancelled) return
+      if (anonData) setAllAnonReviews(anonData)
+      if (myPhaseData) {
+        setUserSubmittedPhases(
+          (myPhaseData as { phase: string; review_id: string }[])
+            .filter((r) => r.phase !== 'pre_contract')
+            .map((r) => r.phase)
+        )
+        setMyReviewIds(new Set((myPhaseData as { phase: string; review_id: string }[]).map((r) => r.review_id)))
+      }
+    }
 
     const load = async () => {
       const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -126,27 +157,52 @@ function SalespersonDetailContent() {
           }
         }
 
-        if (full) {
-          setUnlockedData(full)
-          await fetchReviews(supabase, user.id)
+        if (!full && searchParams.get('payment') === 'success') {
+          // Stripe リダイレクト直後: webhook 処理の遅延を考慮して上限付きで再確認
+          setPaymentPending(true)
+          const capturedUserId = user.id
+          // 累計: 2秒後・5秒後・10秒後に確認（各ステップの待機時間）
+          const retryDelays = [2000, 3000, 5000]
+          ;(async () => {
+            let found = false
+            for (const delay of retryDelays) {
+              await new Promise<void>(r => setTimeout(r, delay))
+              if (cancelled) return
+              try {
+                const { data: retryArr } = await supabase
+                  .rpc('get_unlocked_salesperson_profile', { p_agent_id: id as string })
+                if (cancelled) return
+                const retryFull = (retryArr && retryArr.length > 0) ? retryArr[0] : null
+                if (retryFull) {
+                  await applyUnlockedData(retryFull, capturedUserId)
+                  found = true
+                  break
+                }
+              } catch {
+                // RPC エラーは無視して次のリトライへ
+              }
+            }
+            if (cancelled) return
+            setPaymentPending(false)
+            if (found) {
+              if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href)
+                url.searchParams.delete('payment')
+                window.history.replaceState({}, '', url.pathname + url.search + url.hash)
+              }
+            } else {
+              setPaymentTimeout(true)
+            }
+          })()
+        }
 
-          const [{ data: anonData }, { data: myPhaseData }] = await Promise.all([
-            supabase
-              .from('anonymous_reviews')
-              .select('id, rating, content, phase, source, created_at')
-              .eq('salesperson_id', id)
-              .eq('status', 'visible')
-              .order('created_at', { ascending: false }),
-            supabase.rpc('get_my_submitted_phases', { p_salesperson_id: id }),
-          ])
-          if (anonData) setAllAnonReviews(anonData)
-          if (myPhaseData) {
-            setUserSubmittedPhases(
-              (myPhaseData as { phase: string; review_id: string }[])
-                .filter((r) => r.phase !== 'pre_contract')
-                .map((r) => r.phase)
-            )
-            setMyReviewIds(new Set((myPhaseData as { phase: string; review_id: string }[]).map((r) => r.review_id)))
+        if (full) {
+          await applyUnlockedData(full, user.id)
+          // Webhook反映が速く初回取得で開示済みだった場合もURLの payment=success を除去
+          if (searchParams.get('payment') === 'success' && typeof window !== 'undefined') {
+            const url = new URL(window.location.href)
+            url.searchParams.delete('payment')
+            window.history.replaceState({}, '', url.pathname + url.search + url.hash)
           }
         }
 
@@ -159,6 +215,7 @@ function SalespersonDetailContent() {
     }
 
     load()
+    return () => { cancelled = true }
   }, [id])
 
   const handleFavoriteToggle = async () => {
@@ -749,6 +806,24 @@ function SalespersonDetailContent() {
         {/* 詳細開示CTA（未開示の場合のみ） */}
         {!unlockedData && (
           <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
+            {paymentPending ? (
+              <div className="text-center py-4 space-y-2">
+                <p className="text-sm font-bold text-gray-700">決済を確認中...</p>
+                <p className="text-xs text-gray-400">しばらくお待ちください。完了後に自動で切り替わります。</p>
+              </div>
+            ) : paymentTimeout ? (
+              <div className="text-center py-4 space-y-3">
+                <p className="text-sm font-bold text-gray-700">決済情報を確認しています</p>
+                <p className="text-xs text-gray-500">反映まで少し時間がかかる場合があります。このページを再読み込みすると確認できます。</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-xs text-teal-600 underline"
+                >
+                  ページを再読み込みする
+                </button>
+              </div>
+            ) : (
+              <>
             <p className="text-gray-800 font-bold text-base mb-1">この営業担当者への相談を始める</p>
             <p className="text-gray-500 text-sm mb-1">氏名・詳細プロフィール・公開中の口コミを確認し、この営業担当者へ相談リクエストを送れるようになります。</p>
             <p className="text-gray-400 text-xs mb-5">利用開始後も、相談を送るかどうかは自由に判断できます。</p>
@@ -761,6 +836,8 @@ function SalespersonDetailContent() {
               相談を開始する
             </button>
             <p className="text-center text-xs text-gray-400 mt-2">利用料金 1,000円（税込）</p>
+              </>
+            )}
           </div>
         )}
 
