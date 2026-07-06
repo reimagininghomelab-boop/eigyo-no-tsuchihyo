@@ -448,15 +448,14 @@ export default function SalespersonDashboard() {
                                 {r.status === 'hidden' && <span className="ml-2 text-stone-400">（非表示中）</span>}
                               </p>
                             </div>
+                            {/* 第一段階: 営業の直接status更新をDB側で停止したため一時無効化。第二段階で hide_own_review RPC に接続予定 */}
                             <button
                               onClick={() => handleToggleReview(r.id, r.status)}
-                              className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg border transition ${
-                                r.status === 'visible'
-                                  ? 'border-stone-300 text-gray-500 hover:bg-stone-100'
-                                  : 'border-orange-200 text-orange-500 hover:bg-orange-50'
-                              }`}
+                              disabled
+                              title="口コミの非公開機能は現在改修中です"
+                              className="shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-400 cursor-not-allowed"
                             >
-                              {r.status === 'visible' ? '非表示にする' : '表示する'}
+                              改修中
                             </button>
                           </div>
                         </div>
