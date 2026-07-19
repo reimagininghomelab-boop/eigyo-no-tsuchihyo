@@ -21,6 +21,9 @@ type Review = {
   rating: number | null
   content: string
   status: string
+  display_state: string
+  moderation_state: string
+  review_state: string
   created_at: string
 }
 
@@ -69,9 +72,9 @@ export default function MyPage() {
       ] = await Promise.all([
         supabase
           .from('anonymous_reviews')
-          .select('id, salesperson_id, phase, rating, content, status, created_at')
+          .select('id, salesperson_id, phase, rating, content, status, display_state, moderation_state, review_state, created_at')
           .eq('user_id', user.id)
-          .neq('status', 'superseded')
+          .neq('review_state', 'superseded')
           .order('created_at', { ascending: false }),
         supabase
           .from('offers')
@@ -247,18 +250,22 @@ export default function MyPage() {
                     <p className="text-xs font-bold text-gray-500">投稿済み口コミ</p>
                     {reviews.map((r) => {
                       const phase = REVIEW_PHASES.find((p) => p.value === r.phase)
+                      // 状態は3軸で判定（旧statusは意味判断に使わない）。unconfirmedは「確認待ち」
+                      const stateLabel =
+                        r.review_state === 'superseded' ? { text: '更新済み', cls: 'bg-stone-100 text-stone-500' } :
+                        r.moderation_state === 'violation' ? { text: '運営審査により非表示', cls: 'bg-red-100 text-red-600' } :
+                        (r.display_state === 'visible' && r.moderation_state === 'none' && r.review_state === 'active')
+                          ? { text: '公開中', cls: 'bg-green-100 text-green-600' } :
+                        r.display_state === 'concealed' ? { text: '非公開', cls: 'bg-stone-100 text-stone-500' } :
+                        { text: '確認待ち', cls: 'bg-amber-100 text-amber-600' } // unconfirmed 等
                       return (
                         <div key={r.id} className="bg-stone-50 rounded-xl border border-stone-100 px-4 py-3">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-xs text-stone-600 border border-stone-200 bg-white px-2 py-0.5 rounded-full">
                               {phase?.icon} {phase?.label ?? r.phase}
                             </span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              r.status === 'visible' ? 'bg-green-100 text-green-600' :
-                              r.status === 'hidden' ? 'bg-stone-100 text-stone-500' :
-                              'bg-amber-100 text-amber-600'
-                            }`}>
-                              {r.status === 'visible' ? '公開中' : r.status === 'hidden' ? '非表示' : '確認待ち'}
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${stateLabel.cls}`}>
+                              {stateLabel.text}
                             </span>
                           </div>
                           {r.rating && (

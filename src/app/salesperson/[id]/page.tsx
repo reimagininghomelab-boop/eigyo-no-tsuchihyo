@@ -91,7 +91,10 @@ function SalespersonDetailContent() {
           .from('anonymous_reviews')
           .select('id, rating, content, phase, source, created_at')
           .eq('salesperson_id', id)
-          .eq('status', 'visible')
+          // 施主向け本文表示は3軸で判定（旧statusは意味判断に使わない）
+          .eq('display_state', 'visible')
+          .eq('moderation_state', 'none')
+          .eq('review_state', 'active')
           .order('created_at', { ascending: false }),
         supabase.rpc('get_my_submitted_phases', { p_salesperson_id: id }),
       ])
