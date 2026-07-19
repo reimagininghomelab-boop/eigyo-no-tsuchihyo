@@ -76,7 +76,7 @@ export default function WriteReviewPage() {
           .eq('salesperson_id', salesperson_id as string)
           .eq('user_id', currentUser?.id ?? 'INVALID')
           .in('phase', ['post_contract', 'after_start', 'after_handover'])
-          .neq('status', 'superseded'),
+          .neq('review_state', 'superseded'),
       ])
 
       const hasPermission = (offerCount ?? 0) > 0 || (ownPhaseData ?? []).length > 0
@@ -170,6 +170,7 @@ export default function WriteReviewPage() {
             <span className="text-5xl block mb-2">✅</span>
             <p className="text-lg font-bold text-gray-700">口コミを投稿しました</p>
             <p className="text-sm text-gray-400">ご協力ありがとうございました。</p>
+            <p className="text-sm text-gray-400">担当者の確認後に公開されます。</p>
           </div>
           <Link
             href={`/salesperson/${salesperson_id}`}

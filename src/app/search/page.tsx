@@ -449,7 +449,10 @@ function SearchContent() {
       .from('anonymous_reviews')
       .select('id, content, phase, created_at')
       .eq('salesperson_id', agentId)
-      .eq('status', 'visible')
+      // 施主向け本文表示は3軸で判定（旧statusは意味判断に使わない）
+      .eq('display_state', 'visible')
+      .eq('moderation_state', 'none')
+      .eq('review_state', 'active')
       .order('created_at', { ascending: false })
       .limit(6)
     setSelectedReviews(data ?? [])
@@ -518,7 +521,7 @@ function SearchContent() {
 
         const [{ data: unlocked, error: unlockedError }, { data: myReviews }, { data: myOffers }] = await Promise.all([
           supabase.rpc('get_my_unlocked_salesperson_profiles'),
-          supabase.from('anonymous_reviews').select('salesperson_id').eq('user_id', user.id).neq('status', 'superseded'),
+          supabase.from('anonymous_reviews').select('salesperson_id').eq('user_id', user.id).neq('review_state', 'superseded'),
           supabase.from('offers').select('salesperson_id').eq('buyer_id', user.id),
         ])
         if (cancelled) return
