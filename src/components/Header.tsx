@@ -102,16 +102,13 @@ export default function Header({ backButton = false }: { backButton?: boolean })
               )}
               <Link href="/" className="flex items-baseline gap-1.5">
                 <span className="text-xl font-black text-teal-600 tracking-tight">ERABERU</span>
-                <span className="text-xs text-gray-400 hidden lg:block">住宅営業を探す</span>
+                <span className="text-xs text-gray-400 hidden lg:block">注文住宅の担当者選び</span>
               </Link>
             </div>
             {(userType === 'anon' || userType === 'buyer') && (
               <nav className="flex items-center gap-0.5">
                 <Link href="/search" className="text-sm text-gray-600 hover:text-teal-600 px-3 py-1.5 rounded-lg hover:bg-teal-50 transition">
-                  営業を探す
-                </Link>
-                <Link href="/search?ai=1" className="text-sm text-gray-600 hover:text-teal-600 px-3 py-1.5 rounded-lg hover:bg-teal-50 transition">
-                  AIに相談
+                  担当者をさがす
                 </Link>
               </nav>
             )}
@@ -199,10 +196,7 @@ export default function Header({ backButton = false }: { backButton?: boolean })
           {(userType === 'anon' || userType === 'buyer') && (
             <div className="flex items-center gap-0 pb-2 -mx-1 overflow-x-auto">
               <Link href="/search" className="text-xs text-gray-600 whitespace-nowrap px-3 py-1 rounded-lg hover:bg-stone-100 transition">
-                営業を探す
-              </Link>
-              <Link href="/search?ai=1" className="text-xs text-gray-600 whitespace-nowrap px-3 py-1 rounded-lg hover:bg-stone-100 transition">
-                AIに相談
+                担当者をさがす
               </Link>
             </div>
           )}

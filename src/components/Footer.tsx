@@ -5,8 +5,7 @@ const FOOTER_SECTIONS = [
   {
     title: 'サービス',
     links: [
-      { label: '営業を探す', href: '/search' },
-      { label: 'AIに相談', href: '/search?ai=1' },
+      { label: '担当者をさがす', href: '/search' },
     ],
   },
   {
@@ -27,13 +26,13 @@ const FOOTER_SECTIONS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-stone-100 border-t border-stone-200">
+    <footer className="bg-[#f5f7f8] border-t border-stone-200">
       <div className="max-w-4xl mx-auto px-6 py-10 md:py-12">
         {/* サービス説明 */}
         <div className="mb-8">
-          <p className="text-sm font-black text-teal-700 mb-2 tracking-wide">ERABERU</p>
-          <p className="text-sm text-gray-600 leading-relaxed max-w-md">
-            ERABERUは、住宅営業担当者との出会いを通じて、家づくりの不安を減らすサービスです。
+          <p className="text-sm font-bold text-[#488a99] mb-2 tracking-wide">ERABERU</p>
+          <p className="text-[11px] text-[#7a8385] leading-relaxed max-w-md">
+            エラベルは、住宅会社の担当者との出会いを通じて、家づくりの不安を減らすサービスです。
           </p>
         </div>
 
@@ -41,7 +40,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-10">
           {FOOTER_SECTIONS.map((section) => (
             <div key={section.title}>
-              <p className="text-xs font-bold text-gray-500 mb-3 tracking-wider uppercase">
+              <p className="text-xs font-bold text-[#96a0a2] mb-3 tracking-wider uppercase">
                 {section.title}
               </p>
               <ul className="space-y-1">
@@ -49,7 +48,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-gray-700 hover:text-teal-600 focus-visible:text-teal-600 focus-visible:outline-none focus-visible:underline transition-colors py-2 block"
+                      className="text-sm text-[#2d3436] hover:text-[#488a99] focus-visible:text-[#488a99] focus-visible:outline-none focus-visible:underline transition-colors py-2 block"
                     >
                       {link.label}
                     </Link>
@@ -62,8 +61,8 @@ export default function Footer() {
 
         {/* コピーライト */}
         <div className="border-t border-stone-200 pt-6">
-          <p className="text-xs text-gray-400">
-            © {new Date().getFullYear()} ERABERU
+          <p className="text-xs text-[#96a0a2]">
+            © {new Date().getFullYear()} エラベル
           </p>
         </div>
       </div>
