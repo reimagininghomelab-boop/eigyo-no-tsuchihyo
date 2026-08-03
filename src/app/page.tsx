@@ -116,7 +116,7 @@ export default function TopPage() {
             あなたの担当者をさがす
           </Link>
           <p className="text-[11px] text-[#96a0a2] mt-4">
-            まずはお近くの担当者をチェック
+            まずは気になる会社の担当者をチェック
           </p>
         </div>
       </section>
